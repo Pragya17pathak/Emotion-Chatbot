@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <meta name="description" content="EmoCare AI — Your emotion-aware AI companion. Talk, feel, and heal with intelligent emotional support." />
+  <meta name="theme-color" content="#f0e6ff" />
+  <title>EmoCare AI — Talk. Feel. Heal.</title>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Inter:wght@300;400;500&display=swap" rel="stylesheet" />
+
+  <!-- Main Stylesheet -->
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- ════════════════════════════════════════════════
+       HEADER / NAVBAR
+  ════════════════════════════════════════════════ -->
+  <header class="header" role="banner">
+    <div class="header__inner">
+
+      <!-- Brand -->
+      <div class="header__brand">
+        <div class="header__logo" aria-hidden="true">
+          <span class="logo-icon">🌿</span>
+        </div>
+        <div class="header__text">
+          <h1 class="header__title">EmoCare AI</h1>
+          <p class="header__tagline">Talk. Feel. Heal.</p>
+        </div>
+      </div>
+
+      <!-- Header Controls -->
+      <div class="header__controls">
+        <!-- Status Indicator -->
+        <div class="status-badge" id="statusBadge" aria-live="polite">
+          <span class="status-dot"></span>
+          <span class="status-label">Online</span>
+        </div>
+
+        <!-- Dark Mode Toggle -->
+        <button
+          class="theme-toggle"
+          id="themeToggle"
+          aria-label="Toggle dark mode"
+          title="Toggle dark mode"
+        >
+          <span class="theme-toggle__icon theme-toggle__sun" aria-hidden="true">☀️</span>
+          <span class="theme-toggle__icon theme-toggle__moon" aria-hidden="true">🌙</span>
+          <span class="theme-toggle__slider"></span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ════════════════════════════════════════════════
+       MAIN CHAT CONTAINER
+  ════════════════════════════════════════════════ -->
+  <main class="main" role="main">
+    <div class="chat-wrapper">
+
+      <!-- Emotion State Bar -->
+      <div class="emotion-bar" id="emotionBar" role="status" aria-live="polite" aria-label="Current detected emotion">
+        <div class="emotion-bar__inner">
+          <span class="emotion-bar__label">Current Mood:</span>
+          <div class="emotion-badge" id="emotionBadge">
+            <span class="emotion-badge__emoji" id="emotionEmoji">😐</span>
+            <span class="emotion-badge__text" id="emotionText">Neutral</span>
+          </div>
+        </div>
+        <p class="emotion-bar__hint">Your emotional state is detected from your messages</p>
+      </div>
+
+      <!-- Chat Messages -->
+      <section
+        class="chat-messages"
+        id="chatMessages"
+        role="log"
+        aria-label="Chat conversation"
+        aria-live="polite"
+      >
+        <!-- Welcome Message (injected on load via JS) -->
+      </section>
+
+      <!-- Typing Indicator -->
+      <div class="typing-indicator" id="typingIndicator" aria-label="EmoCare AI is typing" aria-hidden="true">
+        <div class="typing-bubble">
+          <div class="typing-avatar" aria-hidden="true">🌿</div>
+          <div class="typing-dots">
+            <span class="dot"></span>
+            <span class="dot"></span>
+            <span class="dot"></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Suggestion Chips ──────────────────────── -->
+      <div class="suggestions" id="suggestions" role="group" aria-label="Quick message suggestions">
+        <p class="suggestions__label">Quick Start:</p>
+        <div class="suggestions__chips" id="suggestionChips">
+          <button class="chip" data-message="I feel stressed" id="chip-stressed">😟 I feel stressed</button>
+          <button class="chip" data-message="I had a bad day" id="chip-badday">😔 I had a bad day</button>
+          <button class="chip" data-message="I feel happy today" id="chip-happy">😊 I feel happy today</button>
+          <button class="chip" data-message="I'm feeling anxious" id="chip-anxious">😰 I'm feeling anxious</button>
+          <button class="chip" data-message="I need someone to talk to" id="chip-talk">💙 I need someone to talk to</button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- ════════════════════════════════════════════════
+       STICKY INPUT BAR
+  ════════════════════════════════════════════════ -->
+  <footer class="input-bar" role="contentinfo">
+    <div class="input-bar__inner">
+
+      <!-- Emoji Picker Trigger -->
+      <button class="emoji-btn" id="emojiBtn" aria-label="Insert emoji" title="Emoji">
+        <span aria-hidden="true">😊</span>
+      </button>
+
+      <!-- Emoji Panel -->
+      <div class="emoji-panel" id="emojiPanel" role="dialog" aria-label="Emoji picker" aria-hidden="true">
+        <div class="emoji-panel__grid" id="emojiGrid"></div>
+      </div>
+
+      <!-- Text Input -->
+      <div class="input-wrapper">
+        <textarea
+          class="chat-input"
+          id="chatInput"
+          placeholder="Share what's on your mind…"
+          rows="1"
+          maxlength="1000"
+          aria-label="Type your message"
+          autocomplete="off"
+          autocorrect="on"
+          spellcheck="true"
+        ></textarea>
+        <span class="char-counter" id="charCounter">0/1000</span>
+      </div>
+
+      <!-- Send Button -->
+      <button
+        class="send-btn"
+        id="sendBtn"
+        aria-label="Send message"
+        title="Send"
+        disabled
+      >
+        <svg class="send-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <line x1="22" y1="2" x2="11" y2="13"></line>
+          <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+        </svg>
+      </button>
+    </div>
+  </footer>
+
+  <!-- Main Script -->
+  <script src="script.js"></script>
+</body>
+</html>
