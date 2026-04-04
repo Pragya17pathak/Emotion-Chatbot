@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "EmoCare AI - Emotion-Aware Chatbot",
   "engines": {
-    "node": "18.x"
+    "node": "20.x"
   },
   "dependencies": {}
 }

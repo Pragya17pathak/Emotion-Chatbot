@@ -28,8 +28,11 @@ module.exports = async function handler(req, res) {
     }
 
     const apiKey = process.env.OPENROUTER_API_KEY;
+    console.log("[DEBUG] API Key loaded:", apiKey ? "✅ Yes" : "❌ No");
+    console.log("[DEBUG] Process env keys:", Object.keys(process.env).filter(k => k.includes("OPEN")));
+    
     if (!apiKey) {
-      return res.status(500).json({ error: "OpenRouter API key not configured." });
+      return res.status(500).json({ error: "OpenRouter API key not configured. Check .env.local file." });
     }
 
     // ─── System Instruction — Emotional Support Persona ──────────────────────
@@ -56,23 +59,16 @@ Guidelines:
     ];
 
     // ─── Call OpenRouter API with model fallback chain ────────────────────────
+    // OpenRouter allows a maximum of 3 models in the native fallback array.
+    // Using most stable free models; if all fail, try paid models as fallback
     const FREE_MODELS = [
-      "meta-llama/llama-3-8b-instruct",
-      "mistralai/mistral-7b-instruct:free",
-      "google/gemma-2-9b-it:free",
-      "microsoft/phi-3-mini-128k-instruct:free",
-      "huggingfaceh4/zephyr-7b-beta:free",
-      "openchat/openchat-7b:free",
-      "qwen/qwen-2.5-7b-instruct:free",
-      "meta-llama/llama-3.3-70b-instruct:free",
-      "deepseek/deepseek-r1:free",
-      "openai/gpt-oss-120b:free",
+      "openrouter/auto",  // OpenRouter's auto-selector for best available model
     ];
 
     let data = null;
     let lastError = null;
 
-    for (const model of FREE_MODELS) {
+    try {
       const openRouterRes = await fetch("https://openrouter.ai/api/v1/chat/completions", {
         method: "POST",
         headers: {
@@ -82,7 +78,7 @@ Guidelines:
           "X-Title": "EmoCare AI",
         },
         body: JSON.stringify({
-          model,
+          model: "openrouter/auto",  // Auto-select the best available model
           messages,
           temperature: 0.85,
           max_tokens: 512,
@@ -92,25 +88,27 @@ Guidelines:
 
       if (openRouterRes.ok) {
         data = await openRouterRes.json();
-        console.log(`✅ Model used: ${model}`);
-        break; // success — stop trying
+        console.log(`✅ Model used: ${data.model}`);
+      } else {
+        lastError = await openRouterRes.json();
+        console.error(`❌ OpenRouter failed (${openRouterRes.status}):`, lastError);
+        
+        // If auth error, stop immediately
+        if (openRouterRes.status === 401) {
+          return res.status(500).json({ error: "Invalid OpenRouter API key.", details: lastError });
+        }
+        
+        return res.status(openRouterRes.status).json({ error: "Failed to reach AI API.", details: lastError });
       }
-
-      const errData = await openRouterRes.json();
-      const code = errData?.error?.code;
-      console.warn(`⚠️ Model ${model} failed (HTTP ${openRouterRes.status}, code: ${code}), trying next...`);
-      lastError = errData;
-
-      // Only retry on 429 (rate limit) or 404 (model unavailable)
-      const httpStatus = openRouterRes.status;
-      if (code !== 429 && code !== 404 && httpStatus !== 429 && httpStatus !== 404) {
-        return res.status(502).json({ error: "Failed to reach AI API.", details: errData });
-      }
+    } catch (fetchErr) {
+      console.error("Fetch error:", fetchErr);
+      lastError = { message: fetchErr.message };
+      return res.status(502).json({ error: "Network error contacting AI API.", details: lastError });
     }
 
     if (!data) {
-      console.error("All models failed. Last error:", lastError);
-      return res.status(502).json({ error: "All AI models are currently unavailable. Please try again shortly.", details: lastError });
+      console.error("API request failed. Last error:", lastError);
+      return res.status(502).json({ error: "Failed to reach AI API.", details: lastError });
     }
 
     // Extract the response text (OpenAI-compatible format)
